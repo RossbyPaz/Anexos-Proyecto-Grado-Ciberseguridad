@@ -1,0 +1,63 @@
+#!/bin/bash
+set -euo pipefail
+
+OUTDIR="./reporte/nmap_results_$(date +%Y%m%d_%H%M%S)"
+TARGET="192.168.100.50"
+
+while getopts ":t:o:h" opt; do
+  case $opt in
+    t) TARGET="$OPTARG" ;;
+    o) OUTDIR="$OPTARG" ;;
+    h) echo "Uso: sudo $0 -t <target> [-o <outdir>]"; exit 1 ;;
+    *) echo "Uso: sudo $0 -t <target> [-o <outdir>]"; exit 1 ;;
+  esac
+done
+
+if [[ -z "$TARGET" ]]; then
+  echo "Falta -t <target>"
+  exit 1
+fi
+
+if [[ $EUID -ne 0 ]]; then
+  echo "Ejecuta con sudo"
+  exit 1
+fi
+
+command -v nmap >/dev/null 2>&1 || { echo "Instala nmap"; exit 2; }
+#command -v nikto >/dev/null 2>&1 || { echo "Instala nikto"; exit 2; }
+
+mkdir -p "$OUTDIR"
+echo "Resultados en: $OUTDIR"
+echo "Objetivo: $TARGET"
+
+# 01 - Discovery (puertos 22,80,443)
+nmap -Pn -n -sT -p 22,80,443 --open -T3 -oA "$OUTDIR/01_discovery" "$TARGET"
+
+# 02 - Top 100 puertos con detección de versión
+nmap -sT --top-ports 100 -sV -T3 --open -oA "$OUTDIR/02_tcp_top" "$TARGET"
+
+# 03 - Detección de versiones en puertos críticos
+nmap -sT -sV -p 22,80,443,139,445,3389 -T3 --max-retries 2 --open -oA "$OUTDIR/03_service_version" "$TARGET"
+
+# 04 - Escaneo web con NSE (http-title, http-headers)
+nmap -p 80,443 -sT -sV --script "http-title,http-headers,ssl-cert,ssl-enum-ciphers" -T3 --max-retries 2 -oA "$OUTDIR/04_web" "$TARGET"
+
+
+# 05 - Escaneo SSL/TLS (cert y ciphers)
+nmap -sT -p 22,80,443,139,445,3989 -sV -T2 --max-retries 0 -oN  "$OUTDIR/01_versions.nmap" "$TARGET"
+
+# 06 - Scripts default y safe (no intrusivo)
+nmap -sT -sV --script "default,safe" -p 22,80,443,139,445,3389 -T2 --max-retries 0 -oN "$OUTDIR/02_safe.nmap" "$TARGET"
+
+# 07 - Escaneo de vulnerabilidades (vuln) - EJECUTAR SOLO CON PERMISO
+nmap -sT -sV --script vuln -p 22,80,443,139,445,3389 -T2 --max-retries 0 -oN "$OUTDIR/03_vuln.nmap" "$TARGET"
+
+# 08 - Escaneo Focalizado
+sudo nmap -p 80,443 -sT -sV --script "http-title,http-headers,ssl-cert,ssl-enum-ciphers" -T2 --max-retries 0 -oN "$OUTDIR/04_web.nmap" "$TARGET"
+
+# 09 - Nikto (scanner web)
+sudo nikto -h http://"$TARGET" -outpsudo
+sudo perl nikto/program/nikto.pl -host  http://"$TARGET" -outpsudo
+
+echo "Escaneos completados. Lista de archivos:"
+ls -lah "$OUTDIR"
