@@ -2,7 +2,7 @@
 set -euo pipefail
 
 OUTDIR="./reporte/nmap_results_$(date +%Y%m%d_%H%M%S)"
-TARGET="192.168.100.50"
+TARGET="193.178.200.30"
 
 while getopts ":t:o:h" opt; do
   case $opt in
