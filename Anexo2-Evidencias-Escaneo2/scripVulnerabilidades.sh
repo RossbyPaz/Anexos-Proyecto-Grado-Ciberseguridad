@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Escaneo Nmap/Nikto por VLAN:
-#  - Recorre un rango de VLANs (10.10.0.x a 10.10.20.x por defecto)
+#  - Recorre un rango de VLANs (40.30.0.x a 40.30.20.x por defecto)
 #  - Descubre qué hosts están encendidos en cada VLAN
 #  - Para cada host, ejecuta los escaneos de nmap/nikto catalogados
 #
@@ -34,7 +34,7 @@ usage() {
 Uso: sudo $0 [opciones]
 
 Opciones:
-  -b <base>     Base de VLAN (por defecto: 10.10)  -> genera 10.10.X.Y
+  -b <base>     Base de VLAN (por defecto: 10.10)  -> genera 40.30.X.Y
   -s <inicio>   VLAN inicial (por defecto: 0)
   -e <fin>      VLAN final   (por defecto: 20)
   -o <outdir>   Directorio raíz de resultados (por defecto: $OUTDIR_ROOT)
