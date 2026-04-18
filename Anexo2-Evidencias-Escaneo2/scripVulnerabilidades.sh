@@ -16,11 +16,11 @@ set -euo pipefail
 # ==============
 # Parámetros 
 # ==============
-VLAN_BASE="10.10"          # Base de las VLANs: 10.10.x.x
-VLAN_START=0              # VLAN inicial -> 10.10.0.0/24
-VLAN_END=1
+VLAN_BASE="20.20"          # Base de las VLANs: xx.xx.0.2/32
+VLAN_START=2              # VLAN inicial -> xx.xx.x.3/32
+VLAN_END=3
 
-             # VLAN final   -> 10.10.20.0/24
+             # VLAN final   ->xx.xx.x.3/32
 OUTDIR_ROOT="./nmap_vlans_$(date +%Y%m%d_%H%M%S)"
 
 # Opciones de descubrimiento
